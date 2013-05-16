@@ -1,0 +1,158 @@
+Video Client
+    This video client will stream Big Buck Bunny (or any ogg video file) from 
+    any content servers which are up and running.
+    
+    Usage
+        Only one optional command line argument:
+            -v this triggers verbose mode
+            
+    Limitations and Known Problems
+        Will only work with ogg video theora files
+        
+        CID Directory Server must be up and running before launching this video client
+        If you force quit out of this application while the video is still streaming,
+        you will need to restart the XIA network (not sure why)
+        
+        Application level failover doesn't do anything interesting at the moment
+        
+        Video plays very choppily when running in the VM. This is because of the 
+        many daemons that are running, leaving no idle CPU time.
+        
+        One of our VM's required the following line to be entered on the command-line
+        at the beginning of each testing session:
+        
+            export LD_PRELOAD=libpulsedsp.so
+            
+            (Otherwise, an assertion will get triggered in Plogg Ogg Decoder)
+            You can also put it in your shell loader file.
+        
+        Network-level failover last known to work with XIA revision pushed on April 5, 2013.
+        It is known to NOT work with the revision posted on April 11, 2013.
+        
+            How to tell if it's working?
+                See our demo video, where we do both scenarios 1 and 3 as described 
+                in our paper. When the transfer switches from ContentServer1 to 
+                ContentServer3, the correct behavior is that app-level failover
+                should NOT kick in. Also, the video should continue when the 
+                content server is later restarted.
+                
+                When attempted to test with the April 11 revision, we found that 
+                app-level failover kicks in during the ContentServer switch 
+                (indicating that network-level failover did not work)
+                and that resuming the video did not work when we powered up
+                the content server after being down for a time (unkown reasons).
+    
+        Must be located in the directory path specified above.
+    
+        Cannot currently support more than 2 Content Servers running, due to limitation 
+        of 4 fallback paths in DAG.
+
+    
+    Modules
+        VideoClient
+            The main class. Just starts the video
+            
+        PloggOggDecoder
+            This is our adaptation of the Plogg video player
+            It contains no XIA-specific code, but it is linked to using our 
+            XChunkSocketStream specifically.
+            
+        ChunkFetcher
+            This is where all the networking and chunking magic happens
+            This runs in its own thread contacting the CID Directory Server 
+            for windows of chunks, creating the dags, and requesting chunks
+            Application-level failover happens here.
+            
+        XChunkSocketStream
+            This is a wrapper around our ChunkQueue, for use in PloggOggDecoder
+            The PloggOggDecoder expectes and istream, and instead of
+            going in there and changing things, we decided to make this adapter
+            class.
+            
+        ChunkQueue
+            A thread-safe container of chunk pointers. This is what the ChunkFetcher
+            fills up and what the XChunkSocketStream empties.
+            
+        Chunk
+            Represents a Chunk
+            
+        VideoInformation
+            A simple struct used by ChunkFetcher to store info about a video
+        
+        ClientConfig
+            This contains many global constants that can and should be tweaked
+            
+        Utility
+            Contains a bunch of utility methods
+            
+    Third Party Library Dependencies
+        libncursesw5-dev
+        gettext
+        xmlto
+        autoconf
+        autogen
+        
+        alsa-lib
+        alsa-plugins
+        
+        libogg
+        libtheora
+        libvorbis
+        SDL
+        libsydneyaudio
+        
+    Detailed Instructions (may not be complete)
+        Install libogg http://www.linuxfromscratch.org/blfs/view/svn/multimedia/libogg.html
+        wget http://downloads.xiph.org/releases/ogg/libogg-1.3.0.tar.xz
+        tar xvfJ libogg-1.3.0.tar.xz
+        follow instructions from there
+
+
+        Install libtheora http://www.linuxfromscratch.org/blfs/view/svn/multimedia/libtheora.html 
+        wget http://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.bz2
+        tar xvfj libtheora-1.1.1.tar.bz2
+
+        Install libvorbis http://www.linuxfromscratch.org/blfs/view/svn/multimedia/libvorbis.html
+        wget http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.3.tar.xz 
+        tar xyfJ libvorbis-1.3.3.tar.xz
+        cd libvorbis-1.3.3
+        follow instructions from there
+
+        Make sure you do:
+        sudo make install && 
+        sudo install -v -m644 doc/Vorbis* /usr/share/doc/libvorbis-1.3.3
+
+        Install SDL http://www.linuxfromscratch.org/blfs/view/svn/multimedia/sdl.html
+        wget http://www.libsdl.org/release/SDL-1.2.15.tar.gz
+        tar -zxvf SDL...git 
+        cd SDL...
+        follow instructions from there 
+        Make sure you do:
+        sudo install -v -m755 -d /usr/share/doc/SDL-1.2.15/html &&
+        sudo install -v -m644	docs/html/*.html \ 
+                            /usr/share/doc/SDL-1.2.15/html
+
+
+        For libsydneyaudio http://git.xiph.org/?p=libsydneyaudio.git
+        git clone git://git.xiph.org/libsydneyaudio.git 
+
+        Go to revision 6017d08 by typing
+        git checkout 6017d08
+
+        Install autoconf:
+             sudo apt-get install autoconf
+             sudo apt-get install libtool
+
+        Type sh autogen.sh
+
+        ./configure --prefix=/usr --disable-static && 
+        make
+        sudo make install
+
+
+        Install alsa-lib (a.k.a. libasound)
+        tar xvfj alsa...
+        ./configure --prefix=/usr --disable-static && 
+        make
+        sudo make install
+        
