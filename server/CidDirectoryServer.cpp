@@ -39,6 +39,8 @@
 #define CHUNKSIZE (1024)
 #define SNAME "www_s.video.com.xia"
 
+#define SID_VIDEO "SID:1f10000001111111111111111111111110000056"
+
 using namespace std;
 
 //GLOBAL CONFIGURATION OPTIONS

@@ -34,4 +34,4 @@ Utility.o: Utility.h Utility.cpp
 
 
 clean:
-	rm *.o CidDirectoryServer ContentServer
+	rm *.o CidDirectoryServer ContentServer1 ContentServer2 ContentServer3 ContentServer4

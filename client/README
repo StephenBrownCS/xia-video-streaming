@@ -7,6 +7,8 @@ Video Client
             -v this triggers verbose mode
             
     Limitations and Known Problems
+        The client is set to wait 5 seconds before beginning video playback
+    
         Will only work with ogg video theora files
         
         CID Directory Server must be up and running before launching this video client
